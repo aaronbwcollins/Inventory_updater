@@ -1,16 +1,18 @@
 import easygui as g
 import gspread
 
+# Version 1.1
+
 ### Scope of creds
 scope = ['https://spreadsheets.google.com/feeds']
 
 ### File path of Service Account creds
-file_path = "insert_file_path.json"
+file_path = "filepath\\to\\service_account.json"
 
 ### Service account authentication
 gc = gspread.service_account(filename=file_path)
 ### 
-wks = gc.open("Inventory")
+wks = gc.open("Inventory_1") ##Changed for Dev enviorment
 ### Creating variable to work from of the worksheet
 worksheet = wks.worksheet("Sheet1")
 
@@ -18,11 +20,12 @@ def add():
 ### Add item function loop
     message = ""
     while True:
-        scan = barcode_scan("Please Scan Barcode\n"+str(message))
+        scan = barcode_scan("Please Scan Barcode to add\n"+str(message))
         if scan == "Quit":
             break
         else:
             message = add_item(scan)
+
 
 def add_item(scan):
 ### Function to add multiple quanties of give item
@@ -40,7 +43,7 @@ def add_item(scan):
     except:
         message = ""
         if g.ccbox("Unknown Barcode\nWould your Like to Add Product?"):
-            new_product_1(scan)
+            message = new_product_1()
             return message
         else:
             return message
@@ -85,7 +88,7 @@ def new_product():
             list_of_lists = worksheet.get_all_values()
             current_number = len(list_of_lists)
             current_number = str(current_number+1)    
-            barcode = g.enterbox("Please Scan Barcode")
+            barcode = g.enterbox("Please Scan Barcode to add")
             worksheet.update_acell("A%s" %(current_number),barcode)
             item = g.enterbox("Please Type Name of Product")
             worksheet.update_acell("B%s" %(current_number),item)
@@ -100,12 +103,14 @@ def new_product_1():
     list_of_lists = worksheet.get_all_values()
     current_number = len(list_of_lists)
     current_number = str(current_number+1)    
-    barcode = g.enterbox("Please Scan Barcode")
+    barcode = g.enterbox("Please Scan Barcode to add")
     worksheet.update_acell("A%s" %(current_number),barcode)
     item = g.enterbox("Please Type Name of Product")
     worksheet.update_acell("B%s" %(current_number),item)
     quantity = g.enterbox("Please Type Quantity")
     worksheet.update_acell("C%s" %(current_number),quantity)
+    message = "%s added to worksheet" % (item)
+    return message
 
 def barcode_scan(message):
 ### Simple fuction to create input box for barcode
@@ -134,7 +139,7 @@ def reduction(scan):
     except:
         message = ""
         if g.ccbox("Unknown Barcode\nWould your Like to Add Product?"):
-            new_product_1(scan)
+            message = new_product_1()
             return message
         else:
             return message
@@ -150,11 +155,21 @@ def quick_pick():
 ### Runs loop for reducting items    
     message = ""
     while True:
-        scan = barcode_scan("Please Scan Barcode\n"+str(message))
+        scan = barcode_scan("Please Scan Barcode to reduce\n"+str(message))
         if scan == "Quit":
             break
+        elif scan == "Convert":
+            convert()
         else:
             message = reduction(scan)
+
+def convert():
+    message = ""
+    scan = barcode_scan("Convert Mode\nPlease Scan Barcode to reduce")
+    reduction(scan)
+    add()
+
+
 
 def main_loop():
 ### Main loop for progam    
@@ -167,12 +182,14 @@ def main_loop():
             quick_pick()
         elif mode == 'Audit':
             audit_inventory()
-        elif mode == "New":
+        elif mode == "New Product":
             new_product()
         elif mode == 'Quit':
             break
         elif mode == 'Help':
             g.msgbox('Modes are\nAdd, Audit, New, Quickpick, or Quit')
+        elif mode == 'Convert':
+            convert()
         else:
             break
 
